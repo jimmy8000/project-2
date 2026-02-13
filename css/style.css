@@ -160,7 +160,7 @@ h1{
 }
 .card{
   position: relative;
-  background: var(--card);
+  background: rgba(255, 255, 255, 0.82);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
@@ -173,27 +173,6 @@ h1{
   max-width: 100%;
   height: auto;
   border-radius: 12px;
-}
-
-
-.card::after{
-  content:"";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg,
-    rgba(47,125,255,0.28),
-    rgba(0,212,255,0.18),
-    rgba(168,85,247,0.14)
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.35;
 }
 
 .card:hover{
