@@ -256,6 +256,9 @@ h1{
   border-top: 1px solid var(--border);
   background: rgba(246, 251, 255, 0.72);
   backdrop-filter: blur(14px);
+  position: relative;
+  bottom: 0;
+  width: 100%;
 }
 .footer-inner{
   padding: 16px 0;
