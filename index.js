@@ -1,87 +1,73 @@
-let map;
-
-const markers = [];
-
-function fitToMarkers() {
-  if (!markers.length) return;
-  const bounds = new google.maps.LatLngBounds();
-  for (const m of markers) bounds.extend(m.position);
-  map.fitBounds(bounds, 60);
-}
-
-function addMarker(position, title = "Marker") {
-  const marker = new google.maps.marker.AdvancedMarkerElement({
-    map,
-    position,
-    title,
-  });
-  markers.push(marker);
-  return marker;
-}
+const locations = [
+  { title: "New York City", position: { lat: 40.7128, lng: -74.006 } },
+  { title: "Central Park", position: { lat: 40.7851, lng: -73.9683 } },
+  { title: "Brooklyn Bridge", position: { lat: 40.7061, lng: -73.9969 } },
+  { title: "Statue of Liberty", position: { lat: 40.6892, lng: -74.0445 } },
+];
 
 async function initMap() {
-  const { Map } = await google.maps.importLibrary("maps");
-  const { AdvancedMarkerElement, PinElement } =
-    await google.maps.importLibrary("marker");
+  const { InfoWindow } = await google.maps.importLibrary("maps");
+  const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
   const { Autocomplete } = await google.maps.importLibrary("places");
 
-  map = new Map(document.getElementById("map"), {
-  center: { lat: 41.8781, lng: -87.6298 },
-  zoom: 11,
-  gestureHandling: "greedy",
-});
+  const mapEl = document.getElementById("my-map");
+  await mapEl.innerMap;
 
-  const pin = new PinElement({
-    background: "#FBBC04",
-    borderColor: "#000000",
-    glyphColor: "#000000",
-  });
+  const infoWindow = new InfoWindow();
 
-  const firstMarker = new AdvancedMarkerElement({
-    map,
-    position: { lat: 41.881832, lng: -87.623177 },
-    content: pin.element,
-    title: "Downtown",
-  });
-  markers.push(firstMarker);
+  // --- Search ---
+  const input = document.getElementById("search-input");
+  const autocomplete = new Autocomplete(input);
+  autocomplete.bindTo("bounds", mapEl.innerMap);
 
-  map.addListener("click", (e) => {
-    addMarker(e.latLng, "Dropped pin");
-  });
+  let searchMarker = null;
 
-  const input = document.getElementById("search");
-  const ac = new Autocomplete(input, {
-    fields: ["geometry", "name", "formatted_address"],
-  });
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
 
-  ac.addListener("place_changed", () => {
-    const place = ac.getPlace();
-    if (!place?.geometry?.location) return;
-
-    const pos = place.geometry.location;
-    addMarker(pos, place.name || "Place");
-    map.panTo(pos);
-    map.setZoom(14);
-  });
-  document.getElementById("btnLocate").addEventListener("click", () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported by your browser.");
+    if (!place.geometry || !place.geometry.location) {
+      alert("No location found for: " + place.name);
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        const pos = { lat: p.coords.latitude, lng: p.coords.longitude };
-        addMarker(pos, "You are here");
-        map.panTo(pos);
-        map.setZoom(15);
-      },
-      (err) => {
-        alert("Could not get your location: " + err.message);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    mapEl.innerMap.setCenter(place.geometry.location);
+    mapEl.innerMap.setZoom(15);
+
+    if (searchMarker) searchMarker.map = null;
+
+    searchMarker = new AdvancedMarkerElement({
+      map: mapEl.innerMap,
+      position: place.geometry.location,
+      title: place.name,
+      content: Object.assign(document.createElement("img"), {
+        src: "https://images.icon-icons.com/3923/PNG/256/pin_gps_location_icon_250191.png",
+        width: 50,
+      }),
+    });
+
+    infoWindow.setContent(`
+      <h3>${place.name}</h3>
+      <p>${place.formatted_address}</p>
+    `);
+    infoWindow.open(mapEl.innerMap, searchMarker);
   });
+
+  for (const location of locations) {
+    const marker = new AdvancedMarkerElement({
+      map: mapEl.innerMap,
+      position: location.position,
+      title: location.title,
+      content: Object.assign(document.createElement("img"), {
+        src: "https://images.icon-icons.com/3923/PNG/256/pin_gps_location_icon_250191.png",
+        width: 50,
+      }),
+    });
+
+    marker.addEventListener("click", () => {
+      infoWindow.setContent(`<h3>${location.title}</h3>`);
+      infoWindow.open(mapEl.innerMap, marker);
+    });
+  }
 }
 
 initMap();
