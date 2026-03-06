@@ -71,3 +71,24 @@ async function initMap() {
 }
 
 initMap();
+
+let current = 0;
+const images = document.querySelectorAll(".cats");
+
+// Hide all except first
+images.forEach((img, i) => img.style.display = i === 0 ? 'block' : 'none');
+
+function showImage(index) {
+  images.forEach(img => img.style.display = 'none');
+  images[index].style.display = 'block';
+}
+
+function next() {
+  current = (current + 1) % images.length;
+  showImage(current);
+}
+
+function prev() {
+  current = (current - 1 + images.length) % images.length;
+  showImage(current);
+}
